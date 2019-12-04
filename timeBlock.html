@@ -1,0 +1,53 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>jRange : jQuery Range Selector</title>
+    <link rel="stylesheet" href="jquery.range.css">
+    <script src="./jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <h2>时间滑块</h2>
+        <div class="select"></div><br><br><br>
+
+        <div class="demo-output">
+            <input class="single-slider" type="hidden" value="0.0" />
+        </div>
+    </div>
+    <script src="./jquery.range.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var obj = {
+                from: 0,
+                to: 1440,
+                step: 60,
+                format: '%s',
+                width: 200,
+                showLabels: true,
+                snap: false,
+                isRange: true,
+                showScale: false,
+                option: ['00:00', '24:00']
+            }
+
+            $('.single-slider').jRange(obj);
+            var start = '', end = ''
+            onEvent()
+
+            document.addEventListener('mouseup', onEvent)
+            document.addEventListener('touchend', onEvent)
+            document.addEventListener('touchcancel', onEvent)
+            $('.clickable-dummy').on('click', onEvent)
+        });
+
+        function onEvent() {
+            start = $('.start').html()
+            end = $('.end').html()
+            $('.select').html(start + ' - ' + end)
+        }
+    </script>
+</body>
+
+</html>
