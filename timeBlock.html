@@ -24,9 +24,10 @@
                 to: 1440,
                 step: 60,
                 format: '%s',
-                width: 200,
+                width: 240,
                 showLabels: true,
-                snap: false,
+                isSnap: true,
+                snap: 1, // 间隔一小时
                 isRange: true,
                 showScale: false,
                 option: ['00:00', '24:00']
@@ -37,6 +38,7 @@
             onEvent()
 
             document.addEventListener('mouseup', onEvent)
+            document.addEventListener('mousemove', onEvent)
             document.addEventListener('touchend', onEvent)
             document.addEventListener('touchcancel', onEvent)
             $('.clickable-dummy').on('click', onEvent)
