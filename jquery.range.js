@@ -108,7 +108,6 @@
 			} else if (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length) {
 				e = e.originalEvent.changedTouches[0];
 			}
-
 			var position = e.clientX - this.domNode.offset().left;
 			this.domNode.trigger('change', [this, pointer, position]);
 		},
@@ -134,8 +133,8 @@
 				min = 0;
 				max = self.domNode.width();
 			} else {
-				min = pointer.hasClass('high') ? self.lowPointer.position().left + self.lowPointer.width() / 2 : 0;
-				max = pointer.hasClass('low') ? self.highPointer.position().left + self.highPointer.width() / 2 : self.domNode.width();
+				min = pointer.hasClass('high') ? self.lowPointer.position().left + self.lowPointer.width() / 2 + self.snap : 0;
+				max = pointer.hasClass('low') ? self.highPointer.position().left + self.highPointer.width() / 2  - self.snap : self.domNode.width();
 			}
 			var value = Math.min(Math.max(position, min), max);
 			self.setPosition(pointer, value, true);
@@ -148,14 +147,6 @@
 			if (!isPx) {
 				position = this.prcToPx(position);
 			}
-			// if (highPos - lowPos < 10) {
-			// 	if (pointer[0] === this.highPointer[0]) {
-			// 		highPos = Math.round(lowPos + 10)
-
-			// 	} else {
-			// 		lowPos = Math.round(highPos - 10)
-			// 	}
-
 			if (pointer[0] === this.highPointer[0]) {
 				highPos = Math.round(position - circleWidth);
 			} else {
@@ -169,16 +160,11 @@
 				leftPos = 0;
 			} else {
 				leftPos = lowPos + circleWidth;
-				// if (highPos - lowPos < 10) {
-				// 	leftPos = leftPos - this.snap
-				// }
 			}
 			this.bar[animate ? 'animate' : 'css']({
-				'width': (highPos-leftPos) < this.snap ? this.snap : Math.round(highPos + circleWidth - leftPos) ,
+				'width': Math.round(highPos + circleWidth - leftPos),
 				'left': leftPos 
 			});
-			// position = (highPos-leftPos) < this.snap ? position + this.snap : position
-			console.log('h',highPos,'low', lowPos, 'left:', leftPos, 'position:', position)
 			this.showPointerValue(pointer, position, animate);
 			this.isReadonly();
 		},
