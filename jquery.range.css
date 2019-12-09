@@ -1,9 +1,13 @@
 
 .wrapper{
-  width: 500px;
-  padding: 50px;
-  margin: 100px auto;
-  border: 1px solid #ccc;
+  width: 240px;
+  padding: 20px;
+  margin: 0 auto;
+  box-shadow: -1px 0px 5px #eee,   /*左边阴影*/ 
+                0px -1px 5px #eee,  /*上边阴影*/ 
+                1px 0px 5px #eee,  /*右边阴影*/ 
+                0px 1px 5px #eee;
+  border-radius: 4px;
 }
 
 .slider-container {
