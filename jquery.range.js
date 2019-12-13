@@ -1,10 +1,105 @@
 
-(function ($, window, document, undefined) {
+(function ($, window, document, OpenUICore) {
 	'use strict';
 
 	var jRange = function () {
 		return this.init.apply(this, arguments);
 	};
+	$.otherFunc = {
+		initVal: function (id) {
+			var inputid = `single-slider${id}`,
+				wrapperid = `slider-wrapper${id}`
+			var input = $(`<input class="single-slider" id='${inputid}' type="hidden"   value=0 />`)
+
+			var wrapper = $(`<div class="slider-wrapper" id='${wrapperid}'>
+			<span class="slider-location"></span></div>`)
+			var obj = {
+				from: 0,
+				to: 1440,
+				step: 60,
+				format: '%s',
+				width: 240,
+				showLabels: true,
+				isSnap: true,
+				snap: 1, // 间隔一小时
+				isRange: true,
+				showScale: false,
+				option: ['00:00', '24:00'],
+			}
+			if ($('.slider-wrapper').length < 1) {
+				if ($(`#${inputid}`).length < 1) {
+					$('#' + id).append(wrapper)
+					$('#' + id).append(input)
+				} else {
+					var value = $(`#${inputid}`).attr('value')
+					$(`#${inputid}`).remove()
+					$('#' + id).append(wrapper)
+					$('#' + id).append(input)
+					$(`#${inputid}`).attr('value', value)
+				}
+				$(`#${inputid}`).jRange(obj);
+				// $('.slider-wrapper').attr('id', `${wrapperid}`)
+
+			} else {
+				var sliderArr = $('.slider-wrapper')
+				for (var i = 0, len = sliderArr.length; i < len; i++) {
+					var ids = sliderArr[i].id
+					if (ids !== wrapperid) {
+						$(`#${ids}`).remove()
+						$.otherFunc.initVal(id)
+						return
+					}
+				}
+
+			}
+		},
+		onEvent: function (id, idshow) {
+			var text = $(`#single-slider${id}`).data('low') + '-' + $(`#single-slider${id}`).data('high')
+			$('#' + idshow).html(text)
+			$('#' + idshow).attr('value', text)
+		},
+		addEvent: function (id, idshow, str) {
+			this.initVal(id, str)
+			this.onEvent(id, idshow)
+			this.onBubble()
+
+			$('.slider-wrapper .slider-location').html(str)
+			$('.slider-wrapper').show()
+			document.addEventListener('mouseup', function () {
+				$.otherFunc.onEvent(id, idshow)
+			})
+			document.addEventListener('mousemove', function () {
+				$.otherFunc.onEvent(id, idshow)
+			})
+			document.addEventListener('touchend', function () {
+				$.otherFunc.onEvent(id, idshow)
+			})
+			document.addEventListener('touchcancel', function () {
+				$.otherFunc.onEvent(id, idshow)
+			})
+			$('.clickable-dummy').on('click', function () {
+				$.otherFunc.onEvent(id, idshow)
+			})
+		},
+
+		onBubble: function (id) {
+
+			$(".timebtn").click(function (e) {
+				$('.slider-wrapper').show()
+				$('.slider-wrapper').on('')
+				var e = window.event || e;
+				if (document.all) {
+					e.cancelBubble = true;
+				} else {
+					e.stopPropagation();
+				}
+				$(document).on('mouseup', function () {
+					$('.slider-wrapper').hide()
+				})
+			})
+		}
+	}
+
 	jRange.prototype = {
 		defaults: {
 			onstatechange: function () { },
@@ -27,14 +122,16 @@
                 <div class="clickable-dummy"></div>\
             </div>\
             <div class="scale"></div>\
-		</div>',
+			</div>',
 		init: function (node, options) {
 			this.options = $.extend({}, this.defaults, options);
 			this.inputNode = $(node);
-			this.options.value = this.inputNode.val() || (this.options.isRange ? this.options.from + ',' + this.options.from : this.options.from);
+			this.options.value = (this.options.isRange ? this.options.from + ',' + this.options.to : this.options.from);
+
 			this.domNode = $(this.template);
 			this.domNode.addClass(this.options.theme);
-			this.inputNode.after(this.domNode);
+			// this.inputNode.parent().append(this.domNode);
+			this.inputNode.siblings('.slider-wrapper').append(this.domNode)
 			this.domNode.on('change', this.onChange);
 			this.pointers = $('.pointer', this.domNode);
 			this.lowPointer = this.pointers.first();
@@ -122,9 +219,11 @@
 			if (this.isSingle())
 				this.setPosition(this.pointers.last(), x, true, true);
 			else {
-				var pointer = Math.abs(parseInt(this.pointers.first().css('left'), 10) - x + this.pointers.first().width() / 2) < Math.abs(parseInt(this.pointers.last().css('left'), 10) - x + this.pointers.first().width() / 2) ?
-					this.pointers.first() : this.pointers.last();
-				this.setPosition(pointer, x, true, true);
+				// var circleWidth = this.pointers.first().width() / 2
+				// var pointer = Math.abs(parseInt(this.pointers.first().css('left'), 10) - x + circleWidth) < Math.abs(parseInt(this.pointers.last().css('left'), 10) - x + circleWidth) ?
+				// 	this.pointers.first() : this.pointers.last();
+				// x = this.lowPointer.position().left
+				// this.setPosition(this.pointers.last(), x, true, true);
 			}
 		},
 		onChange: function (e, self, pointer, position) {
@@ -134,7 +233,7 @@
 				max = self.domNode.width();
 			} else {
 				min = pointer.hasClass('high') ? self.lowPointer.position().left + self.lowPointer.width() / 2 + self.snap : 0;
-				max = pointer.hasClass('low') ? self.highPointer.position().left + self.highPointer.width() / 2  - self.snap : self.domNode.width();
+				max = pointer.hasClass('low') ? self.highPointer.position().left + self.highPointer.width() / 2 - self.snap : self.domNode.width();
 			}
 			var value = Math.min(Math.max(position, min), max);
 			self.setPosition(pointer, value, true);
@@ -161,9 +260,10 @@
 			} else {
 				leftPos = lowPos + circleWidth;
 			}
+			// console.log('highPos:', highPos, 'leftPos:', leftPos, 'lowPos:', lowPos, 'position:', position)
 			this.bar[animate ? 'animate' : 'css']({
 				'width': Math.round(highPos + circleWidth - leftPos),
-				'left': leftPos 
+				'left': leftPos
 			});
 			this.showPointerValue(pointer, position, animate);
 			this.isReadonly();
@@ -171,14 +271,14 @@
 		// will be called from outside
 		setValue: function (value) {
 			var values = value.toString().split(',');
-			console.log(values, 'setValue=========')
+			// console.log(values, 'setValue=========')
 			this.options.value = value;
 			var prc = this.valuesToPrc(values.length === 2 ? values : [0, values[0]]);
 			if (this.isSingle()) {
 				this.setPosition(this.highPointer, prc[1]);
 			} else {
 				this.setPosition(this.lowPointer, prc[0]);
-				this.setPosition(this.highPointer, prc[1] + (this.options.width || this.inputNode.width()), true);
+				this.setPosition(this.highPointer, prc[1]);
 			}
 		},
 		renderScale: function () {
@@ -226,7 +326,7 @@
 			this.setInputValue(pointer, value);
 		},
 		valuesToPrc: function (values) {
-			console.log(values, 'valuesToPrc=========')
+			// console.log(values, 'valuesToPrc=========')
 			var lowPrc = ((values[0] - this.options.from) * 100 / this.interval),
 				highPrc = ((values[1] - this.options.from) * 100 / this.interval);
 			return [lowPrc, highPrc];
@@ -252,17 +352,19 @@
 				var values = this.options.value.split(',');
 				if (pointer.hasClass('low')) {
 					this.options.value = v + ',' + values[1];
+					this.inputNode.data('low', this.formatFunc(v))
 				} else {
 					this.options.value = values[0] + ',' + v;
+					this.inputNode.data('high', this.formatFunc(v))
 				}
 			}
 			if (this.inputNode.val() !== this.options.value) {
 				this.inputNode.val(this.options.value);
+				// console.log(this.options.value, 'this.options.value')
 				this.options.onstatechange.call(this, this.options.value);
 			}
 		},
 		getValue: function () {
-
 			return this.options.value;
 		},
 		isReadonly: function () {
@@ -309,4 +411,5 @@
 		return result || this;
 	};
 
-})(jQuery, window, document);
+})(jQuery, window, document, window.OpenUICore);
+
