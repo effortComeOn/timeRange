@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <title>jRange : jQuery Range Selector</title>
     <link rel="stylesheet" href="jquery.range.css">
-    <script src="./jquery.min.js"></script>
+    
+	<script src="./jquery-v1.11.1.js"></script>
 </head>
 
 <body>
+    <body>
     <div class="timebtn" id="single-slider1" onclick="showTimeslidder('single-slider1', 'select1','起飞时间是当地时间')">
         <input class="select-box" id="select1" />
     </div>
@@ -16,10 +18,14 @@
     </div>
     <script src="./jquery.range.js"></script>
     <script type="text/javascript">
+
         function showTimeslidder (id, idshow, str) {
-            $.otherFunc.addEvent(id, idshow, str);
+            // jQuery.otherFunc.delete(`#${id}`,`#${idshow}`); //删除
+            // jQuery(`#${idshow}`).val("02:00-07:00") // 未初始化画块的时候，可以初始化赋值
+            jQuery.otherFunc.addEvent(id, idshow, str);
         }
     </script>
+</body>
 </body>
 
 </html>

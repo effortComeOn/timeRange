@@ -6,14 +6,29 @@
 		return this.init.apply(this, arguments);
 	};
 	$.otherFunc = {
-		initVal: function (id) {
+		formatFunc: function (value) {
+			var hours = Math.floor(value / 60);
+			var mins = (value - hours * 60);
+			return (hours < 10 ? "0" + hours : hours) + ":" + (mins == 0 ? "00" : mins);
+		},
+		resetFunc: function (value) {
+			var arr = value.split(':')
+			return parseInt(arr[0])
+		},
+		delete: function (id, idshow) {
+			var inputid = `single-slider${id}`, wrapperid = `slider-wrapper${id}`
+			$(`#${inputid}`).remove()
+			$(`#${wrapperid}`).remove()
+			$(`#${idshow}`).val("")
+		},
+		initVal: function (id, obj) {
 			var inputid = `single-slider${id}`,
 				wrapperid = `slider-wrapper${id}`
 			var input = $(`<input class="single-slider" id='${inputid}' type="hidden"   value=0 />`)
 
 			var wrapper = $(`<div class="slider-wrapper" id='${wrapperid}'>
 			<span class="slider-location"></span></div>`)
-			var obj = {
+			var objs = {
 				from: 0,
 				to: 1440,
 				step: 60,
@@ -21,24 +36,30 @@
 				width: 240,
 				showLabels: true,
 				isSnap: true,
-				snap: 1, // 间隔一小时
+				snap: 1, // 闂撮殧涓€灏忔椂
 				isRange: true,
 				showScale: false,
 				option: ['00:00', '24:00'],
+				start: 0,
+				end: 1440
 			}
+			objs.start = obj.start ? obj.start * objs.step : objs.start
+			objs.end = obj.end ? obj.end * objs.step : objs.end
 			if ($('.slider-wrapper').length < 1) {
 				if ($(`#${inputid}`).length < 1) {
 					$('#' + id).append(wrapper)
 					$('#' + id).append(input)
 				} else {
-					var value = $(`#${inputid}`).attr('value')
+					var value = $(`#${inputid}`).val()
 					$(`#${inputid}`).remove()
 					$('#' + id).append(wrapper)
 					$('#' + id).append(input)
-					$(`#${inputid}`).attr('value', value)
+					var arr = value.split(',')
+					objs.start = parseInt(arr[0])
+					objs.end = parseInt(arr[1])
 				}
-				$(`#${inputid}`).jRange(obj);
-				// $('.slider-wrapper').attr('id', `${wrapperid}`)
+
+				$(`#${inputid}`).jRange(objs);
 
 			} else {
 				var sliderArr = $('.slider-wrapper')
@@ -46,44 +67,75 @@
 					var ids = sliderArr[i].id
 					if (ids !== wrapperid) {
 						$(`#${ids}`).remove()
-						$.otherFunc.initVal(id)
+						$.otherFunc.initVal(id, obj)
 						return
 					}
 				}
 
 			}
 		},
-		onEvent: function (id, idshow) {
-			var text = $(`#single-slider${id}`).data('low') + '-' + $(`#single-slider${id}`).data('high')
-			$('#' + idshow).html(text)
+		onEvent: function (id, idshow, obj) {
+			var text = '', objstart="",objend="", start = '', end = ""
+			if (obj && obj.start && obj.end) {
+				// console.log(obj, 'obj')
+				objstart = this.formatFunc(obj.start * 60)
+				objend = this.formatFunc(obj.end * 60)
+			}
+			start = $(`#single-slider${id}`).data('low')
+			end = $(`#single-slider${id}`).data('high')
+			// console.log(objstart, objend, '===' ,start, end)
+			text = start && end ? start + '-' + end : objstart&&objend ? objstart+'-'+objend : ''
+			$('#' + idshow).val(text)
 			$('#' + idshow).attr('value', text)
 		},
+		initObj: function (idshow) {
+			var valStart = $(`#${idshow}`).val()
+			var obj = {}
+			if (valStart) {
+				var arr = valStart.split('-')
+				obj = {
+					start: parseInt(arr[0].split(':')[0]),
+					end: parseInt(arr[1].split(':')[0])
+				}
+			}
+			else {
+				valStart = $(`#${idshow}`).val()
+			}
+
+			return obj
+		},
 		addEvent: function (id, idshow, str) {
-			this.initVal(id, str)
-			this.onEvent(id, idshow)
+			var obj = this.initObj(idshow)
+
+			if (obj.end <= obj.start) return
+			this.initVal(id, obj)
+			this.onEvent(id, idshow, obj)
 			this.onBubble()
 
 			$('.slider-wrapper .slider-location').html(str)
 			$('.slider-wrapper').show()
 			document.addEventListener('mouseup', function () {
-				$.otherFunc.onEvent(id, idshow)
+				obj = $.otherFunc.initObj(idshow)
+				$.otherFunc.onEvent(id, idshow, obj)
 			})
 			document.addEventListener('mousemove', function () {
-				$.otherFunc.onEvent(id, idshow)
+				obj = $.otherFunc.initObj(idshow)
+				$.otherFunc.onEvent(id, idshow, obj)
 			})
 			document.addEventListener('touchend', function () {
-				$.otherFunc.onEvent(id, idshow)
+				obj = $.otherFunc.initObj(idshow)
+				$.otherFunc.onEvent(id, idshow, obj)
 			})
 			document.addEventListener('touchcancel', function () {
-				$.otherFunc.onEvent(id, idshow)
+				obj = $.otherFunc.initObj(idshow)
+				$.otherFunc.onEvent(id, idshow, obj)
 			})
-			$('.clickable-dummy').on('click', function () {
-				$.otherFunc.onEvent(id, idshow)
-			})
+			// $('.clickable-dummy').on('click', function () {
+			// 	$.otherFunc.onEvent(id, idshow)
+			// })
 		},
 
 		onBubble: function (id) {
-
 			$(".timebtn").click(function (e) {
 				$('.slider-wrapper').show()
 				$('.slider-wrapper').on('')
@@ -93,9 +145,10 @@
 				} else {
 					e.stopPropagation();
 				}
-				$(document).on('mouseup', function () {
-					$('.slider-wrapper').hide()
-				})
+			})
+
+			$(document).on('mouseup', function () {
+				$('.slider-wrapper').hide()
 			})
 		}
 	}
@@ -112,7 +165,7 @@
 			theme: 'theme-green',
 			width: 300,
 			disable: false,
-			isSnap: false, // 是否有间隔
+			isSnap: false, // 鏄惁鏈夐棿闅�
 		},
 		template: '<div class="slider-container">\
 			<div class="back-bar">\
@@ -126,7 +179,7 @@
 		init: function (node, options) {
 			this.options = $.extend({}, this.defaults, options);
 			this.inputNode = $(node);
-			this.options.value = (this.options.isRange ? this.options.from + ',' + this.options.to : this.options.from);
+			this.options.value = (this.options.isRange ? this.options.start + ',' + this.options.end : this.options.from);
 
 			this.domNode = $(this.template);
 			this.domNode.addClass(this.options.theme);
@@ -168,6 +221,7 @@
 				this.renderScale();
 			}
 			this.setValue(this.options.value);
+			console.log(this.options.value, this.options.from, this.options.to)
 		},
 		isSingle: function () {
 			if (typeof (this.options.value) === 'number') {
@@ -223,7 +277,7 @@
 				// var pointer = Math.abs(parseInt(this.pointers.first().css('left'), 10) - x + circleWidth) < Math.abs(parseInt(this.pointers.last().css('left'), 10) - x + circleWidth) ?
 				// 	this.pointers.first() : this.pointers.last();
 				// x = this.lowPointer.position().left
-				// this.setPosition(this.pointers.last(), x, true, true);
+				// this.setPosition(pointer, x, true, true);
 			}
 		},
 		onChange: function (e, self, pointer, position) {
@@ -412,4 +466,3 @@
 	};
 
 })(jQuery, window, document, window.OpenUICore);
-
