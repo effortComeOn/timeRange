@@ -5,29 +5,27 @@
 	var jRange = function () {
 		return this.init.apply(this, arguments);
 	};
-	$.otherFunc = {
+	var otherFunc = {
 		formatFunc: function (value) {
 			var hours = Math.floor(value / 60);
 			var mins = (value - hours * 60);
 			return (hours < 10 ? "0" + hours : hours) + ":" + (mins == 0 ? "00" : mins);
 		},
 		resetFunc: function (value) {
-			var arr = value.split(':')
+			var arr = value.split(':');
 			return parseInt(arr[0])
 		},
-		delete: function (id, idshow) {
-			var inputid = `single-slider${id}`, wrapperid = `slider-wrapper${id}`
-			$(`#${inputid}`).remove()
-			$(`#${wrapperid}`).remove()
-			$(`#${idshow}`).val("")
+		deleteFunc: function (id, idshow) {
+			$('#single-slider' + id).remove();
+			$('#slider-wrapper' + id).remove();
+			$('#'+idshow).val("");
 		},
 		initVal: function (id, obj) {
-			var inputid = `single-slider${id}`,
-				wrapperid = `slider-wrapper${id}`
-			var input = $(`<input class="single-slider" id='${inputid}' type="hidden"   value=0 />`)
+			var inputid = 'single-slider' + id,
+				wrapperid = 'slider-wrapper' + id
+			var input = $('<input class="single-slider" id=' + inputid + ' type="hidden"   value=0 />')
 
-			var wrapper = $(`<div class="slider-wrapper" id='${wrapperid}'>
-			<span class="slider-location"></span></div>`)
+			var wrapper = $('<div class="slider-wrapper" id='+ wrapperid + '><span class="slider-location"></span></div>')
 			var objs = {
 				from: 0,
 				to: 1440,
@@ -36,7 +34,7 @@
 				width: 240,
 				showLabels: true,
 				isSnap: true,
-				snap: 1, // 闂撮殧涓€灏忔椂
+				snap: 1, // 间隔一小时
 				isRange: true,
 				showScale: false,
 				option: ['00:00', '24:00'],
@@ -46,12 +44,12 @@
 			objs.start = obj.start ? obj.start * objs.step : objs.start
 			objs.end = obj.end ? obj.end * objs.step : objs.end
 			if ($('.slider-wrapper').length < 1) {
-				if ($(`#${inputid}`).length < 1) {
+				if ($('#' +inputid).length < 1) {
 					$('#' + id).append(wrapper)
 					$('#' + id).append(input)
 				} else {
-					var value = $(`#${inputid}`).val()
-					$(`#${inputid}`).remove()
+					var value = $('#' +inputid).val()
+					$('#' +inputid).remove()
 					$('#' + id).append(wrapper)
 					$('#' + id).append(input)
 					var arr = value.split(',')
@@ -59,14 +57,14 @@
 					objs.end = parseInt(arr[1])
 				}
 
-				$(`#${inputid}`).jRange(objs);
+				$('#' +inputid).jRange(objs);
 
 			} else {
 				var sliderArr = $('.slider-wrapper')
 				for (var i = 0, len = sliderArr.length; i < len; i++) {
 					var ids = sliderArr[i].id
 					if (ids !== wrapperid) {
-						$(`#${ids}`).remove()
+						$('#' +ids).remove()
 						$.otherFunc.initVal(id, obj)
 						return
 					}
@@ -81,15 +79,15 @@
 				objstart = this.formatFunc(obj.start * 60)
 				objend = this.formatFunc(obj.end * 60)
 			}
-			start = $(`#single-slider${id}`).data('low')
-			end = $(`#single-slider${id}`).data('high')
+			start = $('#single-slider'+id).data('low')
+			end = $('#single-slider'+id).data('high')
 			// console.log(objstart, objend, '===' ,start, end)
 			text = start && end ? start + '-' + end : objstart&&objend ? objstart+'-'+objend : ''
 			$('#' + idshow).val(text)
 			$('#' + idshow).attr('value', text)
 		},
 		initObj: function (idshow) {
-			var valStart = $(`#${idshow}`).val()
+			var valStart = $('#' + idshow).val()
 			var obj = {}
 			if (valStart) {
 				var arr = valStart.split('-')
@@ -99,7 +97,7 @@
 				}
 			}
 			else {
-				valStart = $(`#${idshow}`).val()
+				valStart = $('#' + idshow).val()
 			}
 
 			return obj
@@ -114,25 +112,41 @@
 
 			$('.slider-wrapper .slider-location').html(str)
 			$('.slider-wrapper').show()
-			document.addEventListener('mouseup', function () {
-				obj = $.otherFunc.initObj(idshow)
-				$.otherFunc.onEvent(id, idshow, obj)
-			})
-			document.addEventListener('mousemove', function () {
-				obj = $.otherFunc.initObj(idshow)
-				$.otherFunc.onEvent(id, idshow, obj)
-			})
-			document.addEventListener('touchend', function () {
-				obj = $.otherFunc.initObj(idshow)
-				$.otherFunc.onEvent(id, idshow, obj)
-			})
-			document.addEventListener('touchcancel', function () {
-				obj = $.otherFunc.initObj(idshow)
-				$.otherFunc.onEvent(id, idshow, obj)
-			})
-			// $('.clickable-dummy').on('click', function () {
-			// 	$.otherFunc.onEvent(id, idshow)
-			// })
+			if (window.attachEvent) {    
+				document.attachEvent('mouseup', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.attachEvent('mousemove', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.attachEvent('touchend', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.attachEvent('touchcancel', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})    
+			} else if (window.addEventListener) {    
+				document.addEventListener('mouseup', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.addEventListener('mousemove', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.addEventListener('touchend', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})
+				document.addEventListener('touchcancel', function () {
+					obj = $.otherFunc.initObj(idshow)
+					$.otherFunc.onEvent(id, idshow, obj)
+				})    
+			}
 		},
 
 		onBubble: function (id) {
@@ -152,7 +166,7 @@
 			})
 		}
 	}
-
+	$.otherFunc = otherFunc
 	jRange.prototype = {
 		defaults: {
 			onstatechange: function () { },
@@ -165,7 +179,7 @@
 			theme: 'theme-green',
 			width: 300,
 			disable: false,
-			isSnap: false, // 鏄惁鏈夐棿闅�
+			isSnap: false, // 是否有间隔
 		},
 		template: '<div class="slider-container">\
 			<div class="back-bar">\
@@ -466,3 +480,4 @@
 	};
 
 })(jQuery, window, document, window.OpenUICore);
+
